@@ -6,7 +6,8 @@ export default {
         { text: "Introduzione", link: "/" },
         { text: "Intervista 1", link: "/intervista1" },
         { text: "Intervista 2", link: "/intervista2" },
-        { text: "Intervista 3", link: "/intervista3" }
+        { text: "Intervista 3", link: "/intervista3" },
+        { text: "Intervista 4", link: "/intervista4" }
         ],
         sidebar: [
         {
@@ -15,7 +16,8 @@ export default {
                 { text: "Introduzione", link: "/" },
                 { text: "Intervista 1", link: "/intervista1" },
                 { text: "Intervista 2", link: "/intervista2" },
-                { text: "Intervista 3", link: "/intervista3" }
+                { text: "Intervista 3", link: "/intervista3" },
+                { text: "Intervista 4", link: "/intervista4" }
             ]
         }
         ]
