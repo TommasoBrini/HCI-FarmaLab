@@ -38,7 +38,8 @@ class Medicine(Base):
     producer: Mapped[str | None] = mapped_column(String(255), nullable=True)
     preservation: Mapped[str | None] = mapped_column(Text, nullable=True)
     contraindication: Mapped[str | None] = mapped_column(Text, nullable=True)
-    side_effect: Mapped[str | None] = mapped_column(Text, nullable=True)  # "vomito,nausea"
+    side_effect: Mapped[str | None] = mapped_column(Text, nullable=True)
+    image: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 class Inventary(Base):
     __tablename__ = "inventary"

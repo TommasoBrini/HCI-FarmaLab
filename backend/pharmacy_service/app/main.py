@@ -35,26 +35,15 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
 @app.post("/medicines", response_model=schemas.MedicineOut, status_code=201)
 def create_medicine(payload: schemas.MedicineCreate, db: Session = Depends(get_db)):
     med = crud.create_medicine(db, payload)
-    # converto side_effect CSV -> lista per l’output
-    out = schemas.MedicineOut.model_validate(med, from_attributes=True)
-    out.side_effect = [x.strip() for x in (med.side_effect or "").split(",") if x.strip()] or None
-    return out
+    return schemas.MedicineOut.model_validate(med, from_attributes=True)
 
-@app.post("/medicines", response_model=schemas.MedicineOut, status_code=201)
-def create_medicine(payload: schemas.MedicineCreate, db: Session = Depends(get_db)):
-    med = crud.create_medicine(db, payload)
 
-    side_effect_list = [x.strip() for x in (med.side_effect or "").split(",") if x.strip()] or None
-
-    return schemas.MedicineOut(
-        id=med.id,
-        name=med.name,
-        active_principle=med.active_principle,
-        producer=med.producer,
-        preservation=med.preservation,
-        contraindication=med.contraindication,
-        side_effect=side_effect_list
-    )
+@app.get("/medicines/{medicine_id}", response_model=schemas.MedicineOut)
+def get_medicine(medicine_id: int, db: Session = Depends(get_db)):
+    med = crud.get_medicine(db, medicine_id)
+    if not med:
+        raise HTTPException(status_code=404, detail="Medicine not found")
+    return schemas.MedicineOut.model_validate(med, from_attributes=True)
 
 @app.put("/inventary", response_model=schemas.InventaryOut)
 def upsert_inventary(payload: schemas.InventaryUpsert, db: Session = Depends(get_db)):

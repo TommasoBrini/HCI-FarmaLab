@@ -50,6 +50,7 @@ def create_medicine(db: Session, payload: schemas.MedicineCreate) -> models.Medi
         preservation=payload.preservation,
         contraindication=payload.contraindication,
         side_effect=_join_list(payload.side_effect),
+        image=str(payload.image) if payload.image else None,
     )
     db.add(med)
     db.commit()

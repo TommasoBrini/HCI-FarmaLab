@@ -1,5 +1,5 @@
 from datetime import date
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, HttpUrl, field_validator
 
 # WAY
 class WayCreate(BaseModel):
@@ -37,7 +37,8 @@ class MedicineCreate(BaseModel):
     producer: str | None = None
     preservation: str | None = None
     contraindication: str | None = None
-    side_effect: list[str] | None = None  # in API come lista
+    side_effect: list[str] | None = None
+    image: HttpUrl | None = None
 
 class MedicineOut(BaseModel):
     id: int
@@ -47,6 +48,18 @@ class MedicineOut(BaseModel):
     preservation: str | None = None
     contraindication: str | None = None
     side_effect: list[str] | None = None
+    image: HttpUrl | None = None
+
+    @field_validator("side_effect", mode="before")
+    @classmethod
+    def split_side_effect(cls, v):
+        if v is None:
+            return None
+        if isinstance(v, str):
+            items = [x.strip() for x in v.split(",") if x.strip()]
+            return items or None
+        return v
+
     class Config:
         from_attributes = True
 
