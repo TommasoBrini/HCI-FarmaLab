@@ -10,7 +10,7 @@
           <div class="flex items-center gap-3">
             <img :src="profilo" 
                  alt="Profile" 
-                 class="w-16 h-16 rounded-full" />
+                 class="w-16 h-16 rounded-full object-cover" />
             <span class="font-medium">Alex Testa</span>
           </div>
         </div>

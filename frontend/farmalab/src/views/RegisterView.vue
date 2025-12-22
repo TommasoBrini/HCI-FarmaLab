@@ -72,7 +72,7 @@
               >
                 <option value="">Seleziona ruolo</option>
                 <option value="farmacista">Farmacista</option>
-                <option value="utente">Utente</option>
+                <option value="utente">Infermiera/e</option>
               </select>
               <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                 <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -92,6 +92,8 @@
               >
                 <option value="">Seleziona farmacia</option>
                 <option value="farmacia-roma">Farmacia Roma</option>
+                <option value="farmacia-milano">Farmacia Milano</option>
+                <option value="farmacia-napoli">Farmacia Napoli</option>
               </select>
               <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                 <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -102,7 +104,7 @@
           </div>
 
           <div class="text-right">
-            <a href="#" class="text-sm text-gray-600 hover:text-purple-600">
+            <a href="" @click.prevent="betaInfo" class="text-sm text-gray-600 hover:text-purple-600">
               Non vedo il mio luogo di lavoro
             </a>
           </div>
@@ -122,6 +124,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { successAlert, errorAlert, infoAlert } from '@/utils/sweetalert'
 
 const router = useRouter()
 
@@ -138,9 +141,50 @@ const goBack = () => {
   router.push('/login')
 }
 
-const handleRegister = () => {
+const handleRegister = async () => {
   console.log('Registrazione:', form.value)
-  router.push('/home')
-  alert('Registrazione completata, utente loggato')
+
+  if (!form.value.nome || !form.value.cognome || !form.value.email || !form.value.password || !form.value.ruolo) {
+    errorAlert('Dati mancanti', 'Compila tutti i campi obbligatori')
+    return
+  }
+
+  if (form.value.password.length < 8) {
+    errorAlert('Password troppo corta', 'La password deve avere almeno 8 caratteri')
+    return
+  }
+
+  const payload = {
+    name: form.value.nome,
+    surname: form.value.cognome,
+    email: form.value.email,
+    password: form.value.password,
+    role: form.value.ruolo,
+    way_id: null
+  }
+
+  try {
+    const res = await fetch('http://localhost:8000/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => null)
+      const message = errBody?.detail || errBody?.message || res.statusText || 'Errore nella registrazione'
+      throw new Error(message)
+    }
+
+    successAlert('Registrazione completata!', 'Benvenuto in FarmaLab')
+    router.push('/home')
+  } catch (err: any) {
+    console.error('Errore registrazione:', err)
+    errorAlert('Registrazione fallita', err.message || 'Si è verificato un errore')
+  }
+}
+
+const betaInfo = () => {
+  infoAlert('Ops, sei in modalità beta', 'Questa funzionalità è in sviluppo.')
 }
 </script>

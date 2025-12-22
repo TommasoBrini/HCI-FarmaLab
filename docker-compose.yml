@@ -27,9 +27,19 @@ services:
     ports:
       - "8000:8000"
 
+  frontend:
+    build:
+      context: ./frontend/farmalab
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      - app
+
+
   test:
     build:
-      context: ./backend
+      context: ./backend/pharmacy_service
       dockerfile: Dockerfile
     environment:
       DATABASE_URL: postgresql+psycopg2://postgres:postgres@db:5432/pharmacy

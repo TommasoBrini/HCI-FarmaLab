@@ -65,3 +65,18 @@ export const errorAlert = (title: string, text?: string) => {
     buttonsStyling: false
   })
 }
+
+export const infoAlert = (title: string, text?: string) => {
+  return Swal.fire({
+    title,
+    text,
+    icon: 'info',
+    position: 'center',
+    confirmButtonText: 'OK',
+    customClass: {
+      popup: 'rounded-2xl',
+      confirmButton: 'bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-xl'
+    },
+    buttonsStyling: false
+  })
+}
