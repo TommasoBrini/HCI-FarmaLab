@@ -53,7 +53,7 @@
           <div 
             v-for="product in products" 
             :key="product.id"
-            @click="router.push(`/remove-item/${product.id}`)"
+            @click="router.push(`/remove-item/${product.id}/${product.expiryDate}`)"
             class="bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition flex items-center justify-between cursor-pointer"
           >
             <div class="flex items-center gap-6">
@@ -86,7 +86,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import profilo from '@/assets/images/profilo.jpg'
 import farmacoImg from '@/assets/images/foto-farmaco-esempio.jpg'
@@ -98,16 +98,33 @@ const filters = ['Entro 1 mese', 'Entro 3 mesi', 'Entro 6 mesi', 'Entro 1 anno']
 const activeFilter = ref('Entro 1 mese')
 const searchQuery = ref('')
 
-const products = ref([
-  { id: 1, name: 'Lexil 20cp 10g', quantity: '30 pz', expiryDate: '1 gennaio 2025' },
-  { id: 2, name: 'Lexil 20cp 10g', quantity: '30 pz', expiryDate: '1 gennaio 2025' },
-  { id: 3, name: 'Lexil 20cp 10g', quantity: '30 pz', expiryDate: '1 gennaio 2025' },
-  { id: 4, name: 'Lexil 20cp 10g', quantity: '30 pz', expiryDate: '1 gennaio 2025' },
-  { id: 5, name: 'Lexil 20cp 10g', quantity: '30 pz', expiryDate: '1 gennaio 2025' },
-  { id: 6, name: 'Lexil 20cp 10g', quantity: '30 pz', expiryDate: '1 gennaio 2025' },
-])
+const products = ref<any[]>([])
 
-const logout = () => {
-  router.push('/login')
+const formatDateIT = (iso: string) => {
+  try {
+    const d = new Date(iso)
+    return d.toLocaleDateString('it-IT', { year: 'numeric', month: 'long', day: 'numeric' })
+  } catch (e) {
+    return iso
+  }
 }
+
+const loadInventary = async () => {
+  try {
+    const res = await fetch('http://localhost:8000/inventary')
+    if (!res.ok) throw new Error(res.statusText)
+    const data = await res.json()
+    products.value = data.map((r: any) => ({
+      id: r[0] ?? r.id_medicine,
+      name: r[1] ?? r.medicine_name,
+      quantity: `${r[4] ?? r.quantity} pz`,
+      expiryDate: formatDateIT(r[3] ?? r.expire_date)
+    }))
+  } catch (err) {
+    console.error('Errore caricamento inventario:', err)
+  }
+}
+
+onMounted(loadInventary)
+
 </script>

@@ -34,7 +34,7 @@ const router = createRouter({
       component: AddItemView
     },
     {
-      path: '/remove-item/:id',
+      path: '/remove-item/:idMedicine/:expireDate',
       name: 'remove-item',
       component: RemoveItemView
     },

@@ -13,10 +13,20 @@
       </div>
 
       <div class="flex-1 flex flex-col items-center justify-center px-8 pb-24">
-        <div class="w-48 h-60 bg-white rounded-2xl shadow-lg flex items-center justify-center mb-8">
-          <svg class="w-24 h-24 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="w-48 h-60 bg-white rounded-2xl shadow-lg flex items-center justify-center mb-2 overflow-hidden">
+          <img
+            v-if="medicine.image"
+            :src="medicine.image"
+            alt="Medicine image"
+            class="max-w-full max-h-full object-cover"
+            @error="onImageError"
+          />
+          <svg v-else class="w-24 h-24 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
           </svg>
+        </div>
+        <div v-if="medicine.image" class="mb-6">
+          <a :href="medicine.image" target="_blank" rel="noopener" class="text-sm text-purple-600 hover:underline">Apri immagine</a>
         </div>
 
         <div class="grid grid-cols-4 gap-6 w-full max-w-6xl">
@@ -72,24 +82,57 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import Sidebar from '@/components/Sidebar.vue'
 
 const router = useRouter()
 const route = useRoute()
 
+const rawId = route.params.id
+const id = Number(Array.isArray(rawId) ? rawId[0] : rawId ?? 1)
+
 const medicine = ref({
-  id: route.params.id || 1,
-  name: 'Lexil 20cp 10g',
-  activeIngredient: 'propantelina bromuro e bromazepam',
-  manufacturer: 'Teofarma',
-  storage: 'Conservare in un luogo asciutto, con temperatura che si aggira tra i 16 e i 30 C°',
-  contraindications: 'Non somministrare lexil a soggetti cardiopatici o con forti disfunzioni cardiache. È vietata la somministrazione a soggetti con età inferiore ai 12 anni',
-  sideEffects: ['Nausea', 'Vomito', 'Dolore addominale', 'Spasmi', 'Colite', 'Diarrea']
+  id,
+  name: '',
+  activeIngredient: '',
+  manufacturer: '',
+  storage: '',
+  contraindications: '',
+  sideEffects: [] as string[],
+  image: '',
 })
+
+const loadData = async () => {
+  try {
+    const medRes = await fetch(`http://localhost:8000/medicines/${id}`)
+    if (medRes.ok) {
+      const med = await medRes.json()
+      console.log('Medicine image:', med.image)
+      medicine.value.name = med.name
+      medicine.value.activeIngredient = med.active_principle
+      medicine.value.manufacturer = med.producer || ''
+      medicine.value.storage = med.preservation || ''
+      medicine.value.contraindications = med.contraindication || ''
+      medicine.value.sideEffects = med.side_effect || []
+      medicine.value.image = med.image || ''
+    } else {
+      console.error('Errore fetching medicine', medRes.status)
+    }
+  } catch (err) {
+    console.error('Errore loadData:', err)
+  }
+}
+
+onMounted(loadData)
 
 const goBack = () => {
   router.back()
+}
+
+const onImageError = (e: Event) => {
+  console.error('Image load error for', medicine.value.image, e)
+  // clear image to show fallback svg and avoid broken image icon
+  medicine.value.image = ''
 }
 </script>

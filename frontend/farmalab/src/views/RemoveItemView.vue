@@ -51,7 +51,7 @@
         <input
             v-model.number="quantityToRemove"
             type="number"
-            class="w-24 text-center px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-lg"
+            class="w-24 text-center px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-lg no-spinner"
         />
         <button 
             @click="increaseQuantity"
@@ -63,10 +63,10 @@
 
         <div class="w-full max-w-xl space-y-3">
         <button
-            @click="removeQuantity"
+            @click="updateQuantity"
             class="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 rounded-xl transition duration-200 shadow-lg"
         >
-            Rimuovi Quantità
+            Aggiorna Quantità
         </button>
 
         <button
@@ -86,13 +86,39 @@
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import Sidebar from '@/components/Sidebar.vue'
-import { confirmAlert, successAlert } from '@/utils/sweetalert'
+import { confirmAlert, successAlert, errorAlert } from '@/utils/sweetalert'
 
 const router = useRouter()
 const route = useRoute()
 
+const rawId = route.params.idMedicine
+const id = Number(Array.isArray(rawId) ? rawId[0] : rawId ?? 1)
+
+const rawExpire = route.params.expireDate
+const expireDate: string = Array.isArray(rawExpire) ? (rawExpire[0] ?? '2026-01-01') : (rawExpire ?? '2026-01-01')
+const arrayDate = expireDate.split(' ')
+const dateModel = arrayDate.length === 3 ? `${arrayDate[2]}-${convertMonth(arrayDate[1] || 'Gennaio')}-${arrayDate[0]}` : '2026-01-01'
+
+function convertMonth(monthStr: string): string {
+  const months: Record<string, string> = {
+    'gennaio': '01',
+    'febbraio': '02',
+    'marzo': '03',
+    'aprile': '04',
+    'maggio': '05',
+    'giugno': '06',
+    'luglio': '07',
+    'agosto': '08',
+    'settembre': '09',
+    'ottobre': '10',
+    'novembre': '11',
+    'dicembre': '12'
+  }
+  return months[monthStr.toLowerCase()] || '01'
+}
+
 const medicine = ref({
-  id: route.params.id || 1,
+  id: id,
   name: 'Lexil 20cp 10g',
   quantity: '30 unità',
   expiryDate: '1 Gennaio 2026'
@@ -110,17 +136,35 @@ const decreaseQuantity = () => {
   }
 }
 
-const removeQuantity = async () => {
+const updateQuantity = async () => {
   const result = await confirmAlert({
-    title: 'Rimuovere quantità?',
-    text: `Stai per rimuovere ${quantityToRemove.value} unità`,
-    confirmButtonText: 'Sì, rimuovi',
+    title: 'Aggiorna quantità?',
+    text: `Stai per aggiornare ${quantityToRemove.value} unità`,
+    confirmButtonText: 'Sì, aggiorna',
     cancelButtonText: 'Annulla'
   })
 
   if (result.isConfirmed) {
-    await successAlert('Quantità rimossa!', `${quantityToRemove.value} unità sono state rimosse`)
-    router.push('/home')
+    try {
+      const url = `http://localhost:8000/inventary/${id}/${dateModel}`
+      const res = await fetch(url, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quantity: quantityToRemove.value })
+      })
+
+      if (res.ok) {
+        await successAlert('Quantità aggiornata!', `${quantityToRemove.value} unità sono state aggiornate`)
+        router.push('/home')
+      } else {
+        const errBody = await res.json().catch(() => null)
+        const message = errBody?.detail || errBody?.message || res.statusText || 'Errore durante l\'aggiornamento'
+        await errorAlert('Errore', message)
+      }
+    } catch (err: any) {
+      console.error('Errore updateQuantity:', err)
+      await errorAlert('Errore', err.message || 'Si è verificato un errore')
+    }
   }
 }
 
@@ -133,8 +177,21 @@ const removeEntireBatch = async () => {
   })
 
   if (result.isConfirmed) {
-    await successAlert('Lotto rimosso!', 'L\'intero lotto è stato eliminato')
-    router.push('/home')
+    try {
+      const url = `http://localhost:8000/inventary/${id}/${dateModel}`
+      const res = await fetch(url, { method: 'DELETE' })
+      if (res.status === 204 || res.ok) {
+        await successAlert('Lotto rimosso!', 'L\'intero lotto è stato eliminato')
+        router.push('/home')
+      } else {
+        const errBody = await res.json().catch(() => null)
+        const message = errBody?.detail || errBody?.message || res.statusText || 'Errore durante la cancellazione'
+        await errorAlert('Errore', message)
+      }
+    } catch (err: any) {
+      console.error('Errore removeEntireBatch:', err)
+      await errorAlert('Errore', err.message || 'Si è verificato un errore')
+    }
   }
 }
 
@@ -147,3 +204,17 @@ const goToDetails = () => {
 }
 
 </script>
+
+<style scoped>
+input.no-spinner::-webkit-outer-spin-button,
+input.no-spinner::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+}
+input.no-spinner {
+  -webkit-appearance: textfield;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+</style>
