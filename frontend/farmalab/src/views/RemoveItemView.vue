@@ -86,6 +86,7 @@
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import Sidebar from '@/components/Sidebar.vue'
+import { confirmAlert, successAlert } from '@/utils/sweetalert'
 
 const router = useRouter()
 const route = useRoute()
@@ -109,14 +110,30 @@ const decreaseQuantity = () => {
   }
 }
 
-const removeQuantity = () => {
-  alert(`Rimosse ${quantityToRemove.value} unità`)
-  router.push('/home')
+const removeQuantity = async () => {
+  const result = await confirmAlert({
+    title: 'Rimuovere quantità?',
+    text: `Stai per rimuovere ${quantityToRemove.value} unità`,
+    confirmButtonText: 'Sì, rimuovi',
+    cancelButtonText: 'Annulla'
+  })
+
+  if (result.isConfirmed) {
+    await successAlert('Quantità rimossa!', `${quantityToRemove.value} unità sono state rimosse`)
+    router.push('/home')
+  }
 }
 
-const removeEntireBatch = () => {
-  if (confirm('Sei sicuro di voler rimuovere l\'intero lotto?')) {
-    alert('Lotto rimosso completamente')
+const removeEntireBatch = async () => {
+  const result = await confirmAlert({
+    title: 'Rimuovere intero lotto?',
+    text: 'Questa azione non può essere annullata',
+    confirmButtonText: 'Sì, elimina tutto',
+    cancelButtonText: 'Annulla'
+  })
+
+  if (result.isConfirmed) {
+    await successAlert('Lotto rimosso!', 'L\'intero lotto è stato eliminato')
     router.push('/home')
   }
 }

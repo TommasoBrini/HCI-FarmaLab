@@ -82,6 +82,8 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import Sidebar from '@/components/Sidebar.vue'
+import { successAlert, errorAlert } from '@/utils/sweetalert'
+
 
 const router = useRouter()
 
@@ -101,7 +103,12 @@ const decreaseQuantity = () => {
   }
 }
 
-const addMedicine = () => {
+const addMedicine = async () => {
+  if (!medicineName.value) {
+    await errorAlert('Errore', 'Inserisci il nome del farmaco')
+    return
+  }
+
   const medicine = {
     name: medicineName.value,
     quantity: quantity.value,
@@ -109,12 +116,7 @@ const addMedicine = () => {
   }
   
   console.log('Farmaco aggiunto:', medicine)
-  alert('Farmaco aggiunto con successo!')
-  
+  await successAlert('Farmaco aggiunto!', `${medicineName.value} è stato aggiunto al magazzino`)
   router.push('/home')
-}
-
-const logout = () => {
-  router.push('/login')
 }
 </script>
