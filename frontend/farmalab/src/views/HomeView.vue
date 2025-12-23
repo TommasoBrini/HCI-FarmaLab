@@ -58,7 +58,7 @@
           >
             <div class="flex items-center gap-6">
               <div class="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
-                <img :src="farmacoImg" alt="FarmaLab" class="max-w-full max-h-full object-cover" />
+                <img :src="product.image" alt="FarmaLab" class="max-w-full max-h-full object-cover" />
               </div>
 
               <div>
@@ -114,11 +114,13 @@ const loadInventary = async () => {
     const res = await fetch('http://localhost:8000/inventary')
     if (!res.ok) throw new Error(res.statusText)
     const data = await res.json()
+    console.log('Inventary data:', data.map((r: any) => r.image))
     products.value = data.map((r: any) => ({
       id: r[0] ?? r.id_medicine,
       name: r[1] ?? r.medicine_name,
-      quantity: `${r[4] ?? r.quantity} pz`,
-      expiryDate: formatDateIT(r[3] ?? r.expire_date)
+      quantity: `${r[5] ?? r.quantity} pz`,
+      expiryDate: formatDateIT(r[4] ?? r.expire_date),
+      image: r[3] ?? r.image
     }))
   } catch (err) {
     console.error('Errore caricamento inventario:', err)

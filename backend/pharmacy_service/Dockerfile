@@ -14,9 +14,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copio solo app/ e test/ dentro /app
+# Copio solo app/ dentro /app
 COPY app ./app
-COPY test ./test
 
 EXPOSE 8000
 

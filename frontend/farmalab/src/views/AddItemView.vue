@@ -122,7 +122,7 @@ const addMedicine = async () => {
   const isoDate = `${yyyy}-${mm}-${dd}`
 
   const payload = {
-    id_medicine: 1,
+    id_medicine: 3,
     expire_date: isoDate,
     quantity: quantity.value
   }
@@ -150,7 +150,6 @@ const addMedicine = async () => {
   }
 }
 
-// id_medicine placeholder (used by API payload)
 const idMedicine = ref<number | null>(null)
 
 const fillDemo = async () => {
