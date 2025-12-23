@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from .db import Base, engine, get_db
 from . import models, schemas, crud
 from datetime import date 
+from typing import Optional
 
 app = FastAPI(title="Pharmacy Inventory Service", version="1.0.0")
 
@@ -60,8 +61,9 @@ def get_inventary(db: Session = Depends(get_db)):
             id_medicine=r[0],
             medicine_name=r[1],
             active_principle=r[2],
-            expire_date=r[3],
-            quantity=r[4],
+            image=r[3],
+            expire_date=r[4],
+            quantity=r[5],
         )
         for r in rows
     ]
@@ -88,3 +90,27 @@ def delete_inventary(
     if not ok:
         raise HTTPException(status_code=404, detail="Inventary row not found")
     return
+
+@app.get("/medicines", response_model=list[schemas.MedicineOut])
+def list_medicines(starts_with: str | None = None, db: Session = Depends(get_db)):
+    meds = crud.list_medicines(db, starts_with)
+    return [schemas.MedicineOut.model_validate(m, from_attributes=True) for m in meds]
+
+@app.get("/inventary/{id_medicine}/{expire_date}", response_model=schemas.InventaryOutDetailed)
+def get_inventary_row(id_medicine: int, expire_date: date, db: Session = Depends(get_db)):
+    row = crud.get_inventary_row(db, id_medicine, expire_date)
+    if not row:
+        raise HTTPException(status_code=404, detail="Inventary row not found")
+
+    med = crud.get_medicine(db, id_medicine)
+    if not med:
+        raise HTTPException(status_code=404, detail="Medicine not found")
+
+    return schemas.InventaryOutDetailed(
+        id_medicine=id_medicine,
+        medicine_name=med.name,
+        active_principle=med.active_principle,
+        image=med.image,
+        expire_date=row.expire_date,
+        quantity=row.quantity,
+    )

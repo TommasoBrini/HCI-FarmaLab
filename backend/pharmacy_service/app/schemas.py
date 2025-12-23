@@ -80,6 +80,7 @@ class InventaryOutDetailed(BaseModel):
     id_medicine: int
     medicine_name: str
     active_principle: str
+    image: str | None = None
     expire_date: date
     quantity: int
 

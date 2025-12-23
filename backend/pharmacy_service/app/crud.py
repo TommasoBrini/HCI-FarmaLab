@@ -60,6 +60,12 @@ def create_medicine(db: Session, payload: schemas.MedicineCreate) -> models.Medi
 def get_medicine(db: Session, medicine_id: int) -> models.Medicine | None:
     return db.get(models.Medicine, medicine_id)
 
+def list_medicines(db: Session, prefix: str | None = None):
+    stmt = select(models.Medicine).order_by(models.Medicine.name.asc())
+    if prefix:
+        stmt = stmt.where(models.Medicine.name.ilike(f"{prefix}%"))
+    return list(db.execute(stmt).scalars().all())
+
 # INVENTARY (upsert su PK composta)
 def upsert_inventary(db: Session, payload: schemas.InventaryUpsert) -> models.Inventary:
     row = db.get(models.Inventary, {"id_medicine": payload.id_medicine, "expire_date": payload.expire_date})
@@ -81,12 +87,12 @@ def list_inventary(db: Session) -> list[models.Inventary]:
     return list(db.execute(stmt).scalars().all())
 
 def list_inventary_detailed(db: Session):
-    # ritorna righe joinate (inventary + medicine)
     stmt = (
         select(
             models.Inventary.id_medicine,
             models.Medicine.name,
             models.Medicine.active_principle,
+            models.Medicine.image, 
             models.Inventary.expire_date,
             models.Inventary.quantity,
         )
@@ -111,3 +117,7 @@ def delete_inventary_row(db: Session, id_medicine: int, expire_date) -> bool:
     db.delete(row)
     db.commit()
     return True
+
+
+def get_inventary_row(db: Session, id_medicine: int, expire_date):
+    return db.get(models.Inventary, {"id_medicine": id_medicine, "expire_date": expire_date})
