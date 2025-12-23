@@ -5,12 +5,42 @@
       <div class="max-w-2xl">
         <h1 class="text-4xl font-bold mb-8">NOME</h1>
 
-        <input
-          v-model="medicineName"
-          type="text"
-          placeholder="Digita il nome del farmaco oppure scannerizzalo tramite il lettore"
-          class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 mb-8"
-        />
+        <!-- Input con Autocomplete -->
+        <div class="relative mb-8">
+          <input
+            v-model="medicineName"
+            @input="onMedicineNameInput"
+            @focus="showSuggestions = true"
+            @blur="hideSuggestions"
+            type="text"
+            placeholder="Digita il nome del farmaco oppure scannerizzalo tramite il lettore"
+            class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+          />
+
+          <!-- Dropdown Suggerimenti -->
+          <div
+            v-if="showSuggestions && suggestions.length > 0"
+            class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+          >
+            <button
+              v-for="medicine in suggestions"
+              :key="medicine.id"
+              @mousedown.prevent="selectMedicine(medicine)"
+              class="w-full px-4 py-3 text-left hover:bg-purple-50 transition border-b border-gray-100 last:border-b-0"
+            >
+              <div class="font-semibold">{{ medicine.name }}</div>
+              <div class="text-xs text-gray-500">{{ medicine.active_ingredient }}</div>
+            </button>
+          </div>
+
+          <!-- Loading indicator -->
+          <div v-if="loading" class="absolute right-3 top-1/2 -translate-y-1/2">
+            <svg class="animate-spin h-5 w-5 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </div>
+        </div>
 
         <div class="mb-8">
           <h2 class="text-2xl font-bold mb-4">QUANTITA'</h2>
@@ -63,15 +93,15 @@
         </div>
 
         <div class="fixed bottom-8 left-48 right-0 flex justify-center px-6">
-            <button
-                @click="addMedicine"
-                class="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-4 px-8 rounded-xl transition duration-200 transform hover:scale-[1.02] shadow-lg flex items-center justify-center gap-2"
-            >
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                Aggiungi Farmaco
-            </button>
+          <button
+            @click="addMedicine"
+            class="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-4 px-8 rounded-xl transition duration-200 transform hover:scale-[1.02] shadow-lg flex items-center justify-center gap-2"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            Aggiungi Farmaco
+          </button>
         </div>
       </div>
     </main>
@@ -84,7 +114,6 @@ import { useRouter } from 'vue-router'
 import Sidebar from '@/components/Sidebar.vue'
 import { successAlert, errorAlert } from '@/utils/sweetalert'
 
-
 const router = useRouter()
 
 const medicineName = ref('')
@@ -92,6 +121,13 @@ const quantity = ref(10)
 const expiryDay = ref('')
 const expiryMonth = ref('')
 const expiryYear = ref('')
+const idMedicine = ref<number | null>(null)
+
+// Autocomplete
+const suggestions = ref<any[]>([])
+const showSuggestions = ref(false)
+const loading = ref(false)
+let debounceTimer: number | null = null
 
 const increaseQuantity = () => {
   quantity.value++
@@ -103,9 +139,65 @@ const decreaseQuantity = () => {
   }
 }
 
+// Fetch suggerimenti dall'API
+const fetchSuggestions = async (query: string) => {
+  if (!query || query.length < 2) {
+    suggestions.value = []
+    return
+  }
+
+  loading.value = true
+  try {
+    const res = await fetch(`http://localhost:8000/medicines?starts_with=${encodeURIComponent(query)}`)
+    if (res.ok) {
+      const data = await res.json()
+      suggestions.value = data
+    } else {
+      suggestions.value = []
+    }
+  } catch (err) {
+    console.error('Errore fetch suggerimenti:', err)
+    suggestions.value = []
+  } finally {
+    loading.value = false
+  }
+}
+
+// Debounce per evitare troppe chiamate
+const onMedicineNameInput = () => {
+  if (debounceTimer) {
+    clearTimeout(debounceTimer)
+  }
+  
+  debounceTimer = window.setTimeout(() => {
+    fetchSuggestions(medicineName.value)
+  }, 300) // 300ms di delay
+}
+
+// Seleziona un farmaco dal dropdown
+const selectMedicine = (medicine: any) => {
+  medicineName.value = medicine.name
+  idMedicine.value = medicine.id
+  suggestions.value = []
+  showSuggestions.value = false
+  console.log('Farmaco selezionato:', medicine)
+}
+
+// Nascondi suggerimenti con delay per permettere il click
+const hideSuggestions = () => {
+  setTimeout(() => {
+    showSuggestions.value = false
+  }, 200)
+}
+
 const addMedicine = async () => {
   if (!medicineName.value) {
     await errorAlert('Errore', 'Inserisci il nome del farmaco')
+    return
+  }
+
+  if (!idMedicine.value) {
+    await errorAlert('Errore', 'Seleziona un farmaco dai suggerimenti')
     return
   }
 
@@ -122,7 +214,7 @@ const addMedicine = async () => {
   const isoDate = `${yyyy}-${mm}-${dd}`
 
   const payload = {
-    id_medicine: 3,
+    id_medicine: idMedicine.value,
     expire_date: isoDate,
     quantity: quantity.value
   }
@@ -149,8 +241,6 @@ const addMedicine = async () => {
     await errorAlert('Errore', err.message || 'Si è verificato un errore')
   }
 }
-
-const idMedicine = ref<number | null>(null)
 
 const fillDemo = async () => {
   medicineName.value = 'Tachipirina'
