@@ -1,62 +1,6 @@
 <template>
   <div class="flex h-screen bg-gray-100">
-    <aside class="w-48 bg-white shadow-lg flex flex-col">
-      <div class="p-6">
-        <div class="flex items-center justify-center gap-2">
-          <img :src="logo" alt="FarmaLab" class="w-20 h-20 rounded-lg object-cover" />
-        </div>
-      </div>
-
-      <nav class="flex-1 p-4">
-        <ul class="space-y-2">
-          <li>
-            <router-link
-              to="/home"
-              class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-100"
-            >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-              </svg>
-              Home
-            </router-link>
-          </li>
-          <li>
-            <button class="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-purple-100 text-purple-600 font-medium">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              Aggiungi
-            </button>
-          </li>
-          <li>
-            <button class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-100">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              Info
-            </button>
-          </li>
-          <li>
-            <button class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-100">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-              </svg>
-              Log
-            </button>
-          </li>
-        </ul>
-      </nav>
-
-      <div class="p-4 border-t">
-        <button @click="logout" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-100">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-          </svg>
-          Esci
-        </button>
-      </div>
-    </aside>
-
+    <Sidebar />
     <main class="flex-1 overflow-auto p-6 flex justify-center">
       <div class="max-w-2xl">
         <h1 class="text-4xl font-bold mb-8">NOME</h1>
@@ -80,7 +24,7 @@
             <input
               v-model.number="quantity"
               type="number"
-              class="w-32 text-center px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-xl"
+              class="w-32 text-center px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-xl no-spinner"
             />
             <button 
               @click="increaseQuantity"
@@ -135,9 +79,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
-import logo from '@/assets/images/logo.png'
+import Sidebar from '@/components/Sidebar.vue'
+import { successAlert, errorAlert } from '@/utils/sweetalert'
+
 
 const router = useRouter()
 
@@ -157,20 +103,88 @@ const decreaseQuantity = () => {
   }
 }
 
-const addMedicine = () => {
-  const medicine = {
-    name: medicineName.value,
-    quantity: quantity.value,
-    expiryDate: `${expiryDay.value}/${expiryMonth.value}/${expiryYear.value}`
+const addMedicine = async () => {
+  if (!medicineName.value) {
+    await errorAlert('Errore', 'Inserisci il nome del farmaco')
+    return
   }
-  
-  console.log('Farmaco aggiunto:', medicine)
-  alert('Farmaco aggiunto con successo!')
-  
-  router.push('/home')
+
+  if (!expiryDay.value || !expiryMonth.value || !expiryYear.value) {
+    await errorAlert('Errore', 'Inserisci la data di scadenza (giorno, mese, anno)')
+    return
+  }
+
+  const pad = (v: string) => v.toString().padStart(2, '0')
+  const dd = pad(expiryDay.value)
+  const mm = pad(expiryMonth.value)
+  const yyyy = expiryYear.value.toString()
+
+  const isoDate = `${yyyy}-${mm}-${dd}`
+
+  const payload = {
+    id_medicine: 1,
+    expire_date: isoDate,
+    quantity: quantity.value
+  }
+
+  try {
+    const res = await fetch('http://localhost:8000/inventary', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => null)
+      const message = errBody?.detail || errBody?.message || res.statusText || 'Errore durante l\'operazione'
+      throw new Error(message)
+    }
+
+    const data = await res.json().catch(() => null)
+    console.log('Server response:', data)
+    await successAlert('Farmaco aggiunto!', `${medicineName.value} è stato aggiunto al magazzino`)
+    router.push('/home')
+  } catch (err: any) {
+    console.error('Errore addMedicine:', err)
+    await errorAlert('Errore', err.message || 'Si è verificato un errore')
+  }
 }
 
-const logout = () => {
-  router.push('/login')
+// id_medicine placeholder (used by API payload)
+const idMedicine = ref<number | null>(null)
+
+const fillDemo = async () => {
+  medicineName.value = 'Tachipirina'
+  quantity.value = 120
+  expiryDay.value = '30'
+  expiryMonth.value = '06'
+  expiryYear.value = '2026'
+  idMedicine.value = 1
+  await successAlert('Scannerizzato', 'Scannerizzazione completata con successo!')
 }
+
+const onKeyDown = (e: KeyboardEvent) => {
+  const isSelectAll = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a'
+  if (isSelectAll) {
+    e.preventDefault()
+    fillDemo()
+  }
+}
+
+onMounted(() => window.addEventListener('keydown', onKeyDown))
+onBeforeUnmount(() => window.removeEventListener('keydown', onKeyDown))
 </script>
+
+<style scoped>
+input.no-spinner::-webkit-outer-spin-button,
+input.no-spinner::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+}
+input.no-spinner {
+  -webkit-appearance: textfield;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+</style>

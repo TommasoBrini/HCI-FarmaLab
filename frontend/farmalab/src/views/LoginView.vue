@@ -99,15 +99,20 @@ import { useRouter } from 'vue-router'
 
 import logo from '@/assets/images/logo.png'
 import bgImage from '@/assets/images/background.jpg'
+import { successAlert, errorAlert } from '@/utils/sweetalert'
 
 const router = useRouter()
 const email = ref('')
 const password = ref('')
 const showPassword = ref(false)
 
-const handleLogin = () => {
-  console.log('Login:', { email: email.value, password: password.value })
+const handleLogin = async () => {
+  if (!email.value || !password.value) {
+    await errorAlert('Errore', 'Inserisci email e password')
+    return
+  }
+
+  await successAlert('Login effettuato!', 'Benvenuto in FarmaLab')
   router.push('/home')
-  alert('Login effettuato con successo!')
 }
 </script>
