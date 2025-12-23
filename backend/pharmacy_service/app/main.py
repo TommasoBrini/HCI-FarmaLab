@@ -4,10 +4,17 @@ from .db import Base, engine, get_db
 from . import models, schemas, crud
 from datetime import date 
 from typing import Optional
+from .populate_db import populate_db_if_empty
+
 
 app = FastAPI(title="Pharmacy Inventory Service", version="1.0.0")
 
 Base.metadata.create_all(bind=engine)
+
+@app.on_event("startup")
+def startup_populate():
+    populate_db_if_empty()
+
 
 @app.get("/health")
 def health():
