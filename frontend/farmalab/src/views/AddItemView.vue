@@ -5,7 +5,6 @@
       <div class="max-w-2xl">
         <h1 class="text-4xl font-bold mb-8">NOME</h1>
 
-        <!-- Input con Autocomplete -->
         <div class="relative mb-8">
           <input
             v-model="medicineName"
@@ -17,7 +16,6 @@
             class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
           />
 
-          <!-- Dropdown Suggerimenti -->
           <div
             v-if="showSuggestions && suggestions.length > 0"
             class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
@@ -139,7 +137,6 @@ const decreaseQuantity = () => {
   }
 }
 
-// Fetch suggerimenti dall'API
 const fetchSuggestions = async (query: string) => {
   if (!query || query.length < 2) {
     suggestions.value = []
@@ -163,7 +160,6 @@ const fetchSuggestions = async (query: string) => {
   }
 }
 
-// Debounce per evitare troppe chiamate
 const onMedicineNameInput = () => {
   if (debounceTimer) {
     clearTimeout(debounceTimer)
@@ -171,10 +167,9 @@ const onMedicineNameInput = () => {
   
   debounceTimer = window.setTimeout(() => {
     fetchSuggestions(medicineName.value)
-  }, 300) // 300ms di delay
+  }, 300)
 }
 
-// Seleziona un farmaco dal dropdown
 const selectMedicine = (medicine: any) => {
   medicineName.value = medicine.name
   idMedicine.value = medicine.id
@@ -183,7 +178,6 @@ const selectMedicine = (medicine: any) => {
   console.log('Farmaco selezionato:', medicine)
 }
 
-// Nascondi suggerimenti con delay per permettere il click
 const hideSuggestions = () => {
   setTimeout(() => {
     showSuggestions.value = false

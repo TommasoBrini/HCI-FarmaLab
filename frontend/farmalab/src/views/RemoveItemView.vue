@@ -18,11 +18,18 @@
     </div>
 
     <div class="flex-1 flex flex-col items-center justify-center px-6 py-4">
-        <div class="w-40 h-52 bg-white rounded-2xl shadow-lg flex items-center justify-center mb-6">
-        <svg class="w-20 h-20 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="w-48 h-60 bg-white rounded-2xl shadow-lg flex items-center justify-center mb-2 overflow-hidden">
+          <img
+            v-if="medicine.image"
+            :src="medicine.image"
+            alt="Medicine image"
+            class="max-w-full max-h-full object-cover"
+          />
+          <svg v-else class="w-24 h-24 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-        </svg>
+          </svg>
         </div>
+        
 
         <div class="w-full max-w-xl space-y-3 mb-6">
         <div class="bg-white rounded-xl p-3 shadow-sm">
@@ -81,9 +88,8 @@
 
   </div>
 </template>
-
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import Sidebar from '@/components/Sidebar.vue'
 import { confirmAlert, successAlert, errorAlert } from '@/utils/sweetalert'
@@ -121,10 +127,33 @@ const medicine = ref({
   id: id,
   name: 'Lexil 20cp 10g',
   quantity: '30 unità',
-  expiryDate: '1 Gennaio 2026'
+  expiryDate: '1 Gennaio 2026',
+  image: ''
 })
 
 const quantityToRemove = ref(10)
+
+onMounted(async () => {
+  try {
+    const url = `http://localhost:8000/inventary/${id}/${dateModel}`
+    const res = await fetch(url)
+
+    if (res.ok) {
+      const data = await res.json()
+      console.log('Dati inventario caricati:', data)
+      medicine.value = {
+        id: data.id_medicine,
+        name: data.medicine_name,
+        quantity: `${data.quantity} unità`,
+        expiryDate: expireDate,
+        image: data.image
+      }
+      quantityToRemove.value = data.quantity
+    }
+  } catch (err) {
+    console.error('Errore caricamento dati:', err)
+  }
+})
 
 const increaseQuantity = () => {
   quantityToRemove.value++
