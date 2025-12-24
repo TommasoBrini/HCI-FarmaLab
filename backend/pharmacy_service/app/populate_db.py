@@ -21,7 +21,7 @@ MEDICINES_SEED = [
         "preservation": "Conservare sotto i 25°C",
         "contraindication": "Insufficienza epatica grave",
         "side_effect": "nausea,vomito,cefalea",
-        "image": "https://example.com/images/tachipirina.png",
+        "image": "https://www.my-personaltrainer.it/images/farmaci/Tachipirina.jpg",
     },
     {
         "name": "Aspirina",
@@ -30,7 +30,7 @@ MEDICINES_SEED = [
         "preservation": "Conservare in luogo asciutto",
         "contraindication": "Ulcera peptica attiva",
         "side_effect": "gastrite,nausea",
-        "image": "https://example.com/images/aspirina.png",
+        "image": "https://farmaciaguacci.it/image/cache/catalog/1-immagini/004763114_01-750x750.jpg",
     },
     {
         "name": "Brufen",
@@ -39,7 +39,7 @@ MEDICINES_SEED = [
         "preservation": "Conservare sotto i 25°C",
         "contraindication": "Gravidanza terzo trimestre",
         "side_effect": "dolore addominale,nausea,capogiri",
-        "image": "https://example.com/images/brufen.png",
+        "image": "https://www.my-personaltrainer.it/images/farmaci/Brufen.jpg",
     },
     {
         "name": "Zyrtec",
@@ -48,7 +48,7 @@ MEDICINES_SEED = [
         "preservation": "Conservare in confezione originale",
         "contraindication": "Ipersensibilità al principio attivo",
         "side_effect": "sonnolenza,bocca secca",
-        "image": "https://example.com/images/zyrtec.png",
+        "image": "https://www.my-personaltrainer.it/images/farmaci/Zirtec.jpg",
     },
 ]
 
