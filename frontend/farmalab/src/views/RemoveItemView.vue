@@ -103,8 +103,11 @@ const id = Number(Array.isArray(rawId) ? rawId[0] : rawId ?? 1)
 const rawExpire = route.params.expireDate
 const expireDate: string = Array.isArray(rawExpire) ? (rawExpire[0] ?? '2026-01-01') : (rawExpire ?? '2026-01-01')
 const arrayDate = expireDate.split(' ')
-const dateModel = arrayDate.length === 3 ? `${arrayDate[2]}-${convertMonth(arrayDate[1] || 'Gennaio')}-${arrayDate[0]}` : '2026-01-01'
-
+const padDay = (v: string) => v.toString().padStart(2, '0')
+const rawDay = arrayDate[0] ?? '1'
+const dayForModel = padDay(rawDay.replace(/[^0-9]/g, ''))
+const dateModel = arrayDate.length === 3 ? `${arrayDate[2]}-${convertMonth(arrayDate[1] || 'Gennaio')}-${dayForModel}` : '2026-01-01'
+console.log('dateModel:', dateModel)
 function convertMonth(monthStr: string): string {
   const months: Record<string, string> = {
     'gennaio': '01',
