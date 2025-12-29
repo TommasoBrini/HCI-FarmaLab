@@ -15,8 +15,8 @@ RUN npm run build
 FROM nginx:alpine
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# Optional: copy a custom nginx config if present
-# COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy a custom nginx config to enable SPA fallback (try_files)
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
